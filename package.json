@@ -1,0 +1,25 @@
+{
+    "name": "@techta/mailkit",
+    "version": "1.0.0",
+    "description": "Zero-config nodemailer wrapper. Test mode uses Resend SMTP, production accepts any SMTP provider.",
+    "main": "src/index.js",
+    "files": [
+        "src"
+    ],
+    "scripts": {
+        "test": "node -e \"const { createMailer } = require('./src/index.js'); console.log('✅ OK');\""
+    },
+    "keywords": [
+        "nodemailer",
+        "email",
+        "mailer",
+        "resend",
+        "smtp",
+        "mailkit"
+    ],
+    "author": "Peter Thomas <peterglo2200@gmail.com>",
+    "license": "MIT",
+    "dependencies": {
+        "nodemailer": "^6.9.0"
+    }
+}
