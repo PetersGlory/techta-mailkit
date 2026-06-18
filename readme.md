@@ -1,4 +1,4 @@
-# @techta/mailkit
+# @techtas/mailkit
 
 A zero-config nodemailer wrapper with environment-aware setup.
 
@@ -12,7 +12,7 @@ Never set up nodemailer boilerplate again.
 ## Install
 
 ```bash
-npm install @techta/mailkit nodemailer
+npm install @techtas/mailkit nodemailer
 ```
 
 ---
@@ -22,7 +22,7 @@ npm install @techta/mailkit nodemailer
 ### Test mode (Resend)
 
 ```ts
-import { createMailer } from "@techta/mailkit";
+import { createMailer } from "@techtas/mailkit";
 
 const mailer = createMailer({
   env: "test",
@@ -40,7 +40,7 @@ await mailer.send({
 ### Production mode (any SMTP)
 
 ```ts
-import { createMailer } from "@techta/mailkit";
+import { createMailer } from "@techtas/mailkit";
 
 const mailer = createMailer({
   env: "production",
@@ -62,7 +62,7 @@ await mailer.send({
 ### Environment-driven setup (recommended pattern)
 
 ```ts
-import { createMailer, MailKitConfig } from "@techta/mailkit";
+import { createMailer, MailKitConfig } from "@techtas/mailkit";
 
 const config: MailKitConfig =
   process.env.NODE_ENV === "production"
