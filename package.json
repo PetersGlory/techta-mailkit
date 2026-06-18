@@ -21,5 +21,13 @@
     "license": "MIT",
     "dependencies": {
         "nodemailer": "^6.9.0"
-    }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/PetersGlory/techta-mailkit.git"
+    },
+    "bugs": {
+        "url": "https://github.com/PetersGlory/techta-mailkit/issues"
+    },
+    "homepage": "https://github.com/PetersGlory/techta-mailkit#readme"
 }
