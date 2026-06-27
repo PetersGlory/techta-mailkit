@@ -1,6 +1,6 @@
 {
     "name": "@techtas/mailkit",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Zero-config nodemailer wrapper. Test mode uses Resend SMTP, production accepts any SMTP provider.",
     "main": "src/index.js",
     "files": [
