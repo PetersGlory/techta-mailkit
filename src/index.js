@@ -1,6 +1,8 @@
 "use strict";
 
 const nodemailer = require("nodemailer");
+const { resolveProviderConfig } = require("./providers");
+const { withRetry } = require("./retry");
 
 /**
  * @typedef {"test" | "production"} MailEnvironment
@@ -16,13 +18,22 @@ const nodemailer = require("nodemailer");
 /**
  * @typedef {Object} ProductionConfig
  * @property {"production"} env
- * @property {string} host - SMTP host
- * @property {number} [port=587] - SMTP port
- * @property {boolean} [secure] - true for port 465, false for others
- * @property {string} username - SMTP username
- * @property {string} password - SMTP password
+ * @property {string} [provider] - Named provider (resend, sendgrid, postmark, ses, mailgun)
+ * @property {string} [apiKey] - API key for the named provider
+ * @property {string} [host] - SMTP host (unused when provider is set)
+ * @property {number} [port=587] - SMTP port (unused when provider is set)
+ * @property {boolean} [secure] - true for port 465, false for others (unused when provider is set)
+ * @property {string} [username] - SMTP username (unused when provider is set)
+ * @property {string} [password] - SMTP password (unused when provider is set)
  * @property {string} from - Default sender address
  * @property {boolean} [pool=false] - Enable connection pooling
+ * @property {RetryConfig} [retry] - Automatic retry on transport errors
+ */
+
+/**
+ * @typedef {Object} RetryConfig
+ * @property {number} [attempts=1] - Total send attempts (including first)
+ * @property {number} [delay=1000] - Base delay in ms (doubles each retry)
  */
 
 /**
@@ -47,6 +58,7 @@ const nodemailer = require("nodemailer");
  * @property {boolean} success
  * @property {string} [messageId]
  * @property {string} [error]
+ * @property {number} [attempts] - How many send attempts were made (only when retry is configured)
  */
 
 class MailKit {
@@ -56,6 +68,7 @@ class MailKit {
   constructor(config) {
     this._env = config.env;
     this._defaultFrom = config.from;
+    this._retry = config.retry || null;
 
     if (config.env === "test") {
       this._transporter = nodemailer.createTransport({
@@ -68,13 +81,17 @@ class MailKit {
         },
       });
     } else {
+      const smtp = config.provider
+        ? resolveProviderConfig(config)
+        : config;
+
       this._transporter = nodemailer.createTransport({
-        host: config.host,
-        port: config.port ?? 587,
-        secure: config.secure ?? config.port === 465,
+        host: smtp.host,
+        port: smtp.port ?? 587,
+        secure: smtp.secure ?? smtp.port === 465,
         auth: {
-          user: config.username,
-          pass: config.password,
+          user: smtp.username,
+          pass: smtp.password,
         },
         pool: config.pool ?? false,
       });
@@ -111,8 +128,8 @@ class MailKit {
       };
     }
 
-    try {
-      const info = await this._transporter.sendMail({
+    const sendFn = () =>
+      this._transporter.sendMail({
         from: from ?? this._defaultFrom,
         to: Array.isArray(to) ? to.join(", ") : to,
         cc,
@@ -124,11 +141,20 @@ class MailKit {
         attachments,
       });
 
+    try {
+      const info = this._retry
+        ? await withRetry(sendFn, this._retry)
+        : await sendFn();
+
       return { success: true, messageId: info.messageId };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("[MailKit] Send failed:", message);
-      return { success: false, error: message };
+      return {
+        success: false,
+        error: message,
+        attempts: err.attempts || 1,
+      };
     }
   }
 
